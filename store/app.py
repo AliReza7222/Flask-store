@@ -1,5 +1,6 @@
 from flask import Flask
 
+from store import commands
 from store.extensions import (
     bcrypt,
     csrf_protect,
@@ -14,6 +15,7 @@ def create_app(config_obj="store.settings"):
     app = Flask(__name__.split(".")[0])
     app.config.from_object(config_obj)
     register_extensions(app)
+    register_commands(app)
     return app
 
 
@@ -24,3 +26,7 @@ def register_extensions(app):
     login_manager.init_app(app)
     debug_toolbar.init_app(app)
     migrate.init_app(app, db)
+
+
+def register_commands(app):
+    app.cli.add_command(commands.create_admin_user)
