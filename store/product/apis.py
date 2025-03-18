@@ -5,6 +5,7 @@ from flask import Blueprint, jsonify, request
 from store.extensions import db
 from store.permissions import admin_required
 from store.product.models import Product
+from store.utils import to_dict
 
 blueprint = Blueprint("product", __name__, url_prefix="/api/v1/products")
 
@@ -23,6 +24,11 @@ def add_product(user):
             },
         ), HTTPStatus.BAD_REQUEST
 
+    if Product.query.filter_by(name=data.get("name")).first():
+        return jsonify(
+            {"error": f"Product with this name {data.get('name')} already exists."},
+        ), HTTPStatus.BAD_REQUEST
+
     if not isinstance(data.get("price"), (int, float)) or data.get("price") <= 0:
         return jsonify(
             {"error": "Price must be a positive number."},
@@ -33,15 +39,19 @@ def add_product(user):
             {"error": "Inventory must be a non-negative integer."},
         ), HTTPStatus.BAD_REQUEST
 
-    product_data = {
-        "name": data.get("name"),
-        "price": data.get("price"),
-        "inventory": data.get("inventory"),
-        "created_by": user.id,
-        "description": data.get("description", ""),
-    }
-    product = Product(**product_data)
+    product = Product(
+        name=data.get("name"),
+        price=data.get("price"),
+        inventory=data.get("inventory"),
+        created_by=user.id,
+        description=data.get("description", ""),
+    )
     db.session.add(product)
     db.session.commit()
-    product_data.update({"id": product.id, "created_at": product.created_at})
-    return jsonify(product_data), HTTPStatus.CREATED
+    return jsonify(to_dict(product)), HTTPStatus.CREATED
+
+
+@blueprint.route("/<int:product_id>", methods=["GET"])
+def get_product(product_id):
+    product = Product.query.get_or_404(product_id)
+    return jsonify(to_dict(product)), HTTPStatus.OK
