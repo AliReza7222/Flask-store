@@ -55,3 +55,16 @@ def add_product(user):
 def get_product(product_id):
     product = Product.query.get_or_404(product_id)
     return jsonify(to_dict(product)), HTTPStatus.OK
+
+
+@blueprint.route("/<int:product_id>", methods=["DELETE"])
+@admin_required()
+def delete_product(user, product_id):
+    product = Product.query.get_or_404(product_id)
+    db.session.delete(product)
+    db.session.commit()
+    return jsonify(
+        {
+            "message": f"Product with ID {product_id} successfully deleted.",
+        },
+    ), HTTPStatus.OK
