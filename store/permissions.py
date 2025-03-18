@@ -1,3 +1,4 @@
+from functools import wraps
 from http import HTTPStatus
 
 from flask import jsonify
@@ -8,6 +9,7 @@ from store.user.models import User
 
 def admin_required():
     def decorator(func):
+        @wraps(func)
         @jwt_required()
         def wrapper(*args, **kwargs):
             user = User.query.filter_by(email=get_jwt_identity()).first()
