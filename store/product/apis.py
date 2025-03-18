@@ -88,3 +88,33 @@ def list_products():
         "products": [to_dict(product) for product in pagination.items],
     }
     return jsonify(response), HTTPStatus.OK
+
+
+@blueprint.route("/<int:product_id>", methods=["PUT"])
+@admin_required()
+def update_product(user, product_id):
+    data = request.get_json()
+    fields = ("name", "price", "inventory", "description")
+    missing_fields = [field for field in fields if field not in data]
+    product = Product.query.get_or_404(product_id)
+    if missing_fields:
+        return jsonify(
+            {
+                "error": f"Missiong Fields: {', '.join(missing_fields)}",
+            },
+        ), HTTPStatus.BAD_REQUEST
+
+    if (
+        Product.query.filter_by(name=data.get("name")).first()
+        and data.get("name") != product.name
+    ):
+        return jsonify(
+            {"error": "Product with this name already exists."},
+        ), HTTPStatus.BAD_REQUEST
+
+    for field in fields:
+        setattr(product, field, data.get(field))
+    product.updated_by = user.id
+    db.session.add(product)
+    db.session.commit()
+    return jsonify(to_dict(product)), HTTPStatus.OK
