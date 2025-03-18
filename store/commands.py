@@ -1,21 +1,18 @@
 from getpass import getpass
 
 import click
-from email_validator import EmailNotValidError, validate_email
 
 from store.extensions import db
 from store.user.models import User
+from store.validators import validate_email_format
 
 
 @click.command()
 def create_admin_user():
     email = input("Please enter your email: ")
 
-    try:
-        valid = validate_email(email, check_deliverability=True)
-        email = valid.email
-    except EmailNotValidError as e:
-        print(f"Invalid email: {e}")  # noqa: T201
+    if not validate_email_format(email):
+        print("Invalid email.")  # noqa: T201
         return
 
     # checking the existence of a user with this email

@@ -12,6 +12,18 @@ class User(db.Model):
     active = db.Column(db.Boolean(), default=False)
     is_admin = db.Column(db.Boolean(), default=False)
     full_name = db.Column(db.String(150), nullable=True)
+    created_products = db.relationship(
+        "Product",
+        foreign_keys="[Product.created_by]",
+        backref="creator",
+        lazy=True,
+    )
+    updated_products = db.relationship(
+        "Product",
+        foreign_keys="[Product.updated_by]",
+        backref="updater",
+        lazy=True,
+    )
 
     @hybrid_property
     def password(self):

@@ -10,6 +10,7 @@ from flask_jwt_extended import (
 
 from store.extensions import db
 from store.user.models import User
+from store.validators import validate_email_format
 
 blueprint = Blueprint("user", __name__, url_prefix="/api/v1/users")
 
@@ -25,6 +26,9 @@ def register_user():
         return jsonify(
             {"error": "Please enter email and password."},
         ), HTTPStatus.BAD_REQUEST
+
+    if not validate_email_format(email):
+        return jsonify({"error": "Email is InValid."}), HTTPStatus.BAD_REQUEST
 
     if len(password) < 8:  # noqa: PLR2004
         return jsonify(
