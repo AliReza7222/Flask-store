@@ -75,7 +75,7 @@ def login_user():
     user = User.query.filter_by(email=email).first()
 
     if not user or not user.check_password(password):
-        return jsonify({"error": "email or password wrong!"}), HTTPStatus.NOTFOUND
+        return jsonify({"error": "email or password is invalid!"}), HTTPStatus.NOT_FOUND
 
     response = {
         "access_token": create_access_token(identity=user.email),
