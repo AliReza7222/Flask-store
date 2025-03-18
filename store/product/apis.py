@@ -68,3 +68,23 @@ def delete_product(user, product_id):
             "message": f"Product with ID {product_id} successfully deleted.",
         },
     ), HTTPStatus.OK
+
+
+@blueprint.route("/", methods=["GET"])
+def list_products():
+    # https://flask-sqlalchemy.readthedocs.io/en/stable/api/#flask_sqlalchemy.pagination.Pagination
+    page = int(
+        request.args.get("page", 1),
+    )  # default is "1" and for ex: /?page=<number>
+    per_page = 10
+    pagination = Product.query.paginate(page=page, per_page=per_page, error_out=False)
+    response = {
+        "page": pagination.page,
+        "per_page": pagination.per_page,
+        "total_products": pagination.total,
+        "total_pages": pagination.pages,
+        "has_next": pagination.has_next,
+        "has_prev": pagination.has_prev,
+        "products": [to_dict(product) for product in pagination.items],
+    }
+    return jsonify(response), HTTPStatus.OK
