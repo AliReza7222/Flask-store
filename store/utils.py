@@ -15,10 +15,7 @@ def calculate_total_price_products(dict_products, items):
             errors.append(f"Product with id {product_id} not found.")
         elif product.inventory < quantity:
             errors.append(
-                f"""
-                    Product {product_id} has
-                    insufficient stock: {product.inventory} available.
-                """,
+                f"Product {product_id} has insufficient stock: {product.inventory} available.",  # noqa: E501
             )
         else:
             total_price += quantity * product.price
