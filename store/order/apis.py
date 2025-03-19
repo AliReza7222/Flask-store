@@ -86,3 +86,36 @@ def add_order():
     response["items"] = [to_dict(item_obj) for item_obj in item_objects]
     db.session.commit()
     return jsonify(response), HTTPStatus.CREATED
+
+
+@blueprint.route("/tracking/<string:tracking_code>", methods=["GET"])
+@jwt_required()
+def get_order(tracking_code):
+    order = Order.query.filter_by(tracking_code=tracking_code).first()
+    if not order:
+        return jsonify({"error": "Tracking Code InValid."}), HTTPStatus.NOT_FOUND
+    response = to_dict(order)
+    response["items"] = [to_dict(item) for item in order.items]
+    return jsonify(response), HTTPStatus.OK
+
+
+@blueprint.route("/", methods=["GET"])
+@jwt_required()
+def get_list_order():
+    page = int(request.args.get("page", 1))
+    per_page = 5
+    pagination = (
+        Order.query.join(User)  # Inner Join
+        .filter(User.email == get_jwt_identity())
+        .paginate(page=page, per_page=per_page, error_out=False)
+    )
+    response = {
+        "page": pagination.page,
+        "per_page": pagination.per_page,
+        "total_orders": pagination.total,
+        "total_pages": pagination.pages,
+        "has_next": pagination.has_next,
+        "has_prev": pagination.has_prev,
+        "orders": [to_dict(order) for order in pagination.items],
+    }
+    return jsonify(response), HTTPStatus.OK
