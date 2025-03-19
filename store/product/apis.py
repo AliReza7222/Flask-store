@@ -47,8 +47,10 @@ def add_product(user):
         description=data.get("description", ""),
     )
     db.session.add(product)
+    db.session.flush()
+    response = to_dict(product)
     db.session.commit()
-    return jsonify(to_dict(product)), HTTPStatus.CREATED
+    return jsonify(response), HTTPStatus.CREATED
 
 
 @blueprint.route("/<int:product_id>", methods=["GET"])
@@ -116,5 +118,7 @@ def update_product(user, product_id):
         setattr(product, field, data.get(field))
     product.updated_by = user.id
     db.session.add(product)
+    db.session.flush()
+    response = to_dict(product)
     db.session.commit()
-    return jsonify(to_dict(product)), HTTPStatus.OK
+    return jsonify(response), HTTPStatus.OK

@@ -82,7 +82,7 @@ def add_order():
         if (product := dict_products.get(item.get("product_id")))
     ]
     db.session.bulk_save_objects(item_objects)
-    db.session.commit()
     response = to_dict(order)
     response["items"] = [to_dict(item_obj) for item_obj in item_objects]
+    db.session.commit()
     return jsonify(response), HTTPStatus.CREATED
