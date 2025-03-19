@@ -1,6 +1,6 @@
 from flask import Flask
 
-from store import commands, product, user
+from store import commands, order, product, user
 from store.extensions import (
     bcrypt,
     db,
@@ -36,3 +36,4 @@ def register_commands(app):
 def register_blueprints(app):
     app.register_blueprint(user.apis.blueprint)
     app.register_blueprint(product.apis.blueprint)
+    app.register_blueprint(order.apis.blueprint)
