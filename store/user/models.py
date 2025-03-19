@@ -24,6 +24,12 @@ class User(db.Model):
         backref="updater",
         lazy=True,
     )
+    orders = db.relationship(
+        "Order",
+        foreign_keys="[Order.user_id]",
+        backref="user",
+        lazy=True,
+    )
 
     @hybrid_property
     def password(self):
