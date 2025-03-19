@@ -4,6 +4,7 @@ from http import HTTPStatus
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
+from store.enums import OrderStatusEnum
 from store.extensions import db
 from store.order.models import Item, Order
 from store.product.models import Product
@@ -119,3 +120,28 @@ def get_list_order():
         "orders": [to_dict(order) for order in pagination.items],
     }
     return jsonify(response), HTTPStatus.OK
+
+
+@blueprint.route("/<int:order_id>", methods=["DELETE"])
+@jwt_required()
+def delete_pending_order(order_id):
+    order = (
+        Order.query.join(User)
+        .filter(User.email == get_jwt_identity(), Order.id == order_id)
+        .first()
+    )
+    if not order:
+        return jsonify(
+            {"error": f"You don't have any order with ID {order_id}."},
+        ), HTTPStatus.NOT_FOUND
+    if order.status != OrderStatusEnum.PENDING.name:
+        return jsonify(
+            {"error": "Your order is not in 'Pending' status and cannot be deleted."},
+        ), HTTPStatus.FORBIDDEN
+    db.session.delete(order)
+    db.session.commit()
+    return jsonify(
+        {
+            "message": f"Order with ID {order_id} successfully deleted.",
+        },
+    ), HTTPStatus.OK

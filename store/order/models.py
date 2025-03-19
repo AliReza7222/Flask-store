@@ -18,6 +18,7 @@ class Order(db.Model):
         foreign_keys="[Item.order_id]",
         backref="order",
         lazy=True,
+        cascade="all, delete-orphan",
     )
 
     def __repr__(self):
