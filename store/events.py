@@ -1,4 +1,4 @@
-from sqlalchemy import event
+from sqlalchemy import event, inspect
 
 from store.enums import OrderStatusEnum
 from store.extensions import db
@@ -11,6 +11,13 @@ def update_items_and_order_on_product_update(mapper, connection, target):
     """
     Update Items and Pending Order total_price
     """
+    # https://stackoverflow.com/questions/29921260/tracking-model-changes-in-sqlalchemy
+    state = inspect(target)
+    history_product_price = state.get_history("price", True)  # noqa: FBT003
+
+    if not history_product_price.has_changes():
+        return
+
     pending_order_items = (
         Item.query.join(Order)
         .filter(
