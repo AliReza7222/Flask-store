@@ -106,8 +106,8 @@ def update_product(user, product_id):
         ), HTTPStatus.BAD_REQUEST
 
     if db.session.query(
-        db.exists().where(Product.name == data.get("name")),
-    ).scalar() and data.get("name") != data.get("name"):
+        db.exists().where(Product.name == data.get("name"), Product.id != product_id),
+    ).scalar():
         return jsonify(
             {"error": "Product with this name already exists."},
         ), HTTPStatus.BAD_REQUEST
