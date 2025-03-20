@@ -149,21 +149,27 @@ def delete_pending_order(order_id):
     ), HTTPStatus.OK
 
 
-@blueprint.route("/<int:order_id>/confirmed", methods=["PATCH"])
-@jwt_required()
-def confirmed_order(order_id):
+def update_order_status(
+    order_id,
+    identity_user,
+    current_status,
+    new_status,
+    update_inventory,
+):
     order = (
         Order.query.join(User)
         .filter(
-            User.email == get_jwt_identity(),
+            User.email == identity_user,
             Order.id == order_id,
-            Order.status == OrderStatusEnum.PENDING.name,
+            Order.status == current_status,
         )
         .first()
     )
     if not order:
         return jsonify(
-            {"error": f"You don't have any pending order with ID {order_id}."},
+            {
+                "error": f"You don't have any {current_status.lower()} order with ID {order_id}.",  # noqa: E501
+            },
         ), HTTPStatus.NOT_FOUND
 
     items = order.items
@@ -175,22 +181,45 @@ def confirmed_order(order_id):
         .all()
     )
     products_mapp = {product.id: product for product in products}
+
     for item in items:
         product = products_mapp.get(item.product_id)
-        if item.quantity > product.inventory:
-            return jsonify(
-                {
-                    "errors": f"Product {product.id} has insufficient stock: {product.inventory} available.",  # noqa: E501
-                },
-            ), HTTPStatus.BAD_REQUEST
-        product.inventory = product.inventory - item.quantity
-    order.status = OrderStatusEnum.CONFIRMED.name
+        product.inventory = update_inventory(product.inventory, item.quantity)
+
+    order.status = new_status
     try:
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
         return jsonify({"error": "Please try again."}), HTTPStatus.CONFLICT
-    return jsonify({"message": f"Order with ID {order_id} confirmed."}), HTTPStatus.OK
+
+    return jsonify(
+        {"message": f"Order with ID {order_id} {new_status.lower()}."},
+    ), HTTPStatus.OK
+
+
+@blueprint.route("/<int:order_id>/confirmed", methods=["PATCH"])
+@jwt_required()
+def confirmed_order(order_id):
+    return update_order_status(
+        order_id,
+        get_jwt_identity(),
+        OrderStatusEnum.PENDING.name,
+        OrderStatusEnum.CONFIRMED.name,
+        lambda inventory, quantity: inventory - quantity,
+    )
+
+
+@blueprint.route("/<int:order_id>/canceled", methods=["PATCH"])
+@jwt_required()
+def canceled_confirmed_order(order_id):
+    return update_order_status(
+        order_id,
+        get_jwt_identity(),
+        OrderStatusEnum.CONFIRMED.name,
+        OrderStatusEnum.CANCELED.name,
+        lambda inventory, quantity: inventory + quantity,
+    )
 
 
 @blueprint.route("/<int:order_id>/completed", methods=["PATCH"])
