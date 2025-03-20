@@ -8,6 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from store.enums import OrderStatusEnum
 from store.extensions import db
 from store.order.models import Item, Order
+from store.permissions import admin_required
 from store.product.models import Product
 from store.user.models import User
 from store.utils import calculate_total_price_products, to_dict
@@ -190,3 +191,19 @@ def confirmed_order(order_id):
         db.session.rollback()
         return jsonify({"error": "Please try again."}), HTTPStatus.CONFLICT
     return jsonify({"message": f"Order with ID {order_id} confirmed."}), HTTPStatus.OK
+
+
+@blueprint.route("/<int:order_id>/completed", methods=["PATCH"])
+@admin_required()
+def completed_order(user, order_id):
+    order = Order.query.filter(
+        Order.id == order_id,
+        Order.status == OrderStatusEnum.CONFIRMED.name,
+    ).first()
+    if not order:
+        return jsonify(
+            {"error": f"Don't have any confirmed order with ID {order_id}."},
+        ), HTTPStatus.NOT_FOUND
+    order.status = OrderStatusEnum.COMPLETED.name
+    db.session.commit()
+    return jsonify({"message": f"Order with ID {order_id} completed."}), HTTPStatus.OK
