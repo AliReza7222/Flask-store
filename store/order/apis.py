@@ -3,6 +3,7 @@ from http import HTTPStatus
 
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
+from sqlalchemy.exc import IntegrityError
 
 from store.enums import OrderStatusEnum
 from store.extensions import db
@@ -145,3 +146,47 @@ def delete_pending_order(order_id):
             "message": f"Order with ID {order_id} successfully deleted.",
         },
     ), HTTPStatus.OK
+
+
+@blueprint.route("/<int:order_id>/confirmed", methods=["PATCH"])
+@jwt_required()
+def confirmed_order(order_id):
+    order = (
+        Order.query.join(User)
+        .filter(
+            User.email == get_jwt_identity(),
+            Order.id == order_id,
+            Order.status == OrderStatusEnum.PENDING.name,
+        )
+        .first()
+    )
+    if not order:
+        return jsonify(
+            {"error": f"You don't have any pending order with ID {order_id}."},
+        ), HTTPStatus.NOT_FOUND
+
+    items = order.items
+    # using of with_for_update for lock row
+    # https://www.restack.io/p/sqlalchemy-knowledge-with-for-update-example-cat-ai
+    products = (
+        Product.query.filter(Product.id.in_([item.product_id for item in items]))
+        .with_for_update()
+        .all()
+    )
+    products_mapp = {product.id: product for product in products}
+    for item in items:
+        product = products_mapp.get(item.product_id)
+        if item.quantity > product.inventory:
+            return jsonify(
+                {
+                    "errors": f"Product {product.id} has insufficient stock: {product.inventory} available.",  # noqa: E501
+                },
+            ), HTTPStatus.BAD_REQUEST
+        product.inventory = product.inventory - item.quantity
+    order.status = OrderStatusEnum.CONFIRMED.name
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"error": "Please try again."}), HTTPStatus.CONFLICT
+    return jsonify({"message": f"Order with ID {order_id} confirmed."}), HTTPStatus.OK
