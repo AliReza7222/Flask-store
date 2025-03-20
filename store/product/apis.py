@@ -98,7 +98,6 @@ def update_product(user, product_id):
     data = request.get_json()
     fields = ("name", "price", "inventory", "description")
     missing_fields = [field for field in fields if field not in data]
-    product = Product.query.get_or_404(product_id)
     if missing_fields:
         return jsonify(
             {
@@ -106,18 +105,18 @@ def update_product(user, product_id):
             },
         ), HTTPStatus.BAD_REQUEST
 
-    if (
-        Product.query.filter_by(name=data.get("name")).first()
-        and data.get("name") != product.name
-    ):
+    if db.session.query(
+        db.exists().where(Product.name == data.get("name")),
+    ).scalar() and data.get("name") != data.get("name"):
         return jsonify(
             {"error": "Product with this name already exists."},
         ), HTTPStatus.BAD_REQUEST
 
-    for field in fields:
-        setattr(product, field, data.get(field))
+    # Dirty Update for running event after_update
+    product = Product.query.get_or_404(product_id)
+    for field, value in data.items():
+        setattr(product, field, value)
     product.updated_by = user.id
-    db.session.add(product)
     db.session.flush()
     response = to_dict(product)
     db.session.commit()

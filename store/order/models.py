@@ -9,7 +9,7 @@ class Order(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    status = db.Column(db.String(50), default=OrderStatusEnum.PENDING.value)
+    status = db.Column(db.String(50), default=OrderStatusEnum.PENDING.name)
     created_at = db.Column(db.DateTime, default=datetime.datetime.now)
     total_price = db.Column(db.Float, nullable=False)
     tracking_code = db.Column(db.String(40), nullable=False)

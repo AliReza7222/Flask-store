@@ -17,7 +17,7 @@ blueprint = Blueprint("order", __name__, url_prefix="/api/v1/orders")
 
 @blueprint.route("/", methods=["POST"])
 @jwt_required()
-def add_order():
+def add_order():  # Real Project this section is in Cache or session or temp memory.
     """
     Expected data:
 
