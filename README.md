@@ -1,4 +1,4 @@
-# Flask Project Setup Guide
+# Flask Project
 
 ## Installation
 
