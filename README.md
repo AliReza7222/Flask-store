@@ -30,7 +30,7 @@ flask db upgrade
 ```
 
 
-### Create Admin User
+## Create Admin User
 ```bash
 flask create-admin-user
 ```
