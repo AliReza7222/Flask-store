@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, timedelta
 from http import HTTPStatus
 
 from flask import Blueprint, jsonify, request
@@ -236,3 +237,65 @@ def completed_order(user, order_id):
     order.status = OrderStatusEnum.COMPLETED.name
     db.session.commit()
     return jsonify({"message": f"Order with ID {order_id} completed."}), HTTPStatus.OK
+
+
+@blueprint.route("/<int:order_id>", methods=["PUT", "PATCH"])
+@jwt_required()
+def update_pending_order(order_id):
+    condition_date = datetime.now() - timedelta(hours=1)  # noqa: DTZ005
+    order = (
+        Order.query.join(User)
+        .filter(
+            User.email == get_jwt_identity(),
+            Order.id == order_id,
+            Order.status == OrderStatusEnum.PENDING.name,
+            Order.created_at >= condition_date,
+        )
+        .first()
+    )
+
+    if not order:
+        return jsonify(
+            {
+                "error": f"Order with ID {order_id} is not found, cannot be updated, or is too old.",  # noqa: E501
+            },
+        ), HTTPStatus.NOT_FOUND
+
+    data = request.get_json()
+    items = data.get("items", [])
+    if items:
+        if not isinstance(items, list) or not validate_order_items(items):
+            return jsonify({"error": "Invalid 'items' format."}), HTTPStatus.BAD_REQUEST
+
+    product_ids = [item.get("product_id") for item in items]
+    products = (
+        db.session.query(Product.id, Product.price, Product.inventory)
+        .filter(Product.id.in_(product_ids))
+        .all()
+    )
+
+    dict_products = {product.id: product for product in products}
+    calculate_total_price = calculate_total_price_products(dict_products, items)
+
+    if errors := calculate_total_price.get("errors"):
+        return jsonify({"errors": errors}), HTTPStatus.BAD_REQUEST
+
+    Item.query.filter_by(order_id=order.id).delete()
+    item_objects = [
+        Item(
+            order_id=order.id,
+            product_id=product.id,
+            quantity=item.get("quantity"),
+            product_price=product.price,
+        )
+        for item in items
+        if (product := dict_products.get(item.get("product_id")))
+    ]
+    db.session.bulk_save_objects(item_objects)
+    order.total_price = calculate_total_price.get("total_price")
+
+    db.session.commit()
+
+    response = to_dict(order)
+    response["items"] = [to_dict(item_obj) for item_obj in order.items]
+    return jsonify(response), HTTPStatus.OK
