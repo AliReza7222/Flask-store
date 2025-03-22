@@ -9,6 +9,7 @@ from store.extensions import (
     login_manager,
     migrate,
 )
+from store.routes import api
 
 
 def create_app(config_obj="store.settings"):
@@ -34,6 +35,8 @@ def register_commands(app):
 
 
 def register_blueprints(app):
-    app.register_blueprint(user.apis.blueprint)
-    app.register_blueprint(product.apis.blueprint)
-    app.register_blueprint(order.apis.blueprint)
+    # Register API Blueprint
+    api.register_blueprint(user.apis.blueprint)
+    api.register_blueprint(product.apis.blueprint)
+    api.register_blueprint(order.apis.blueprint)
+    app.register_blueprint(api)

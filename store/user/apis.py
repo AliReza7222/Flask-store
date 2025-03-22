@@ -12,7 +12,7 @@ from store.extensions import db
 from store.user.models import User
 from store.validators import validate_email_format
 
-blueprint = Blueprint("user", __name__, url_prefix="/api/v1/users")
+blueprint = Blueprint("user", __name__, url_prefix="/users")
 
 
 @blueprint.route("/", methods=["POST"])

@@ -15,7 +15,7 @@ from store.user.models import User
 from store.utils import calculate_total_price_products, to_dict
 from store.validators import validate_order_items
 
-blueprint = Blueprint("order", __name__, url_prefix="/api/v1/orders")
+blueprint = Blueprint("order", __name__, url_prefix="/orders")
 
 
 @blueprint.route("/", methods=["POST"])

@@ -7,7 +7,7 @@ from store.permissions import admin_required
 from store.product.models import Product
 from store.utils import to_dict
 
-blueprint = Blueprint("product", __name__, url_prefix="/api/v1/products")
+blueprint = Blueprint("product", __name__, url_prefix="/products")
 
 
 @blueprint.route("/", methods=["POST"])
