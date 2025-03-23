@@ -2,7 +2,7 @@
 
 ## Installation
 
-**1. Clone the Repository**  
+**1. Clone the Repository**
 ```bash
    git clone https://github.com/AliReza7222/mini-flask-store.git
    cd mini-flask-store
@@ -36,6 +36,11 @@ flask create-admin-user
 ```
 
 ## Run Project in Debug Mode
-```
+```bash
 flask run --debug
+```
+
+## API docs
+```bash
+http://127.0.0.1:5000/apidocs/
 ```
