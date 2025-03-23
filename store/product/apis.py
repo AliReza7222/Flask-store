@@ -1,9 +1,11 @@
 from http import HTTPStatus
 
+from flasgger import swag_from
 from flask import Blueprint, jsonify, request
 
 from store.extensions import db
 from store.permissions import admin_required
+from store.product import swagger
 from store.product.models import Product
 from store.utils import to_dict
 
@@ -12,6 +14,7 @@ blueprint = Blueprint("product", __name__, url_prefix="/products")
 
 @blueprint.route("/", methods=["POST"])
 @admin_required()
+@swag_from(swagger.ADD_PRODUCT)
 def add_product(user):
     data = request.get_json()
     required_fields = ("name", "price", "inventory")
@@ -54,6 +57,7 @@ def add_product(user):
 
 
 @blueprint.route("/<int:product_id>", methods=["GET"])
+@swag_from(swagger.GET_PRODUCT)
 def get_product(product_id):
     product = Product.query.get_or_404(product_id)
     return jsonify(to_dict(product)), HTTPStatus.OK
@@ -61,6 +65,7 @@ def get_product(product_id):
 
 @blueprint.route("/<int:product_id>", methods=["DELETE"])
 @admin_required()
+@swag_from(swagger.DELETE_PRODUCT)
 def delete_product(user, product_id):
     product = Product.query.get_or_404(product_id)
     db.session.delete(product)
@@ -73,6 +78,7 @@ def delete_product(user, product_id):
 
 
 @blueprint.route("/", methods=["GET"])
+@swag_from(swagger.LIST_PRODUCTS)
 def list_products():
     # https://flask-sqlalchemy.readthedocs.io/en/stable/api/#flask_sqlalchemy.pagination.Pagination
     page = int(
@@ -94,6 +100,7 @@ def list_products():
 
 @blueprint.route("/<int:product_id>", methods=["PUT"])
 @admin_required()
+@swag_from(swagger.UPDATE_PRODUCT)
 def update_product(user, product_id):
     data = request.get_json()
     fields = ("name", "price", "inventory", "description")
