@@ -6,8 +6,8 @@ from store.extensions import (
     db,
     debug_toolbar,
     jwt,
-    login_manager,
     migrate,
+    swagger,
 )
 from store.routes import api
 
@@ -24,10 +24,10 @@ def create_app(config_obj="store.settings"):
 def register_extensions(app):
     bcrypt.init_app(app)
     db.init_app(app)
-    login_manager.init_app(app)
     debug_toolbar.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
+    swagger.init_app(app)
 
 
 def register_commands(app):

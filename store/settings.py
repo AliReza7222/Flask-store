@@ -25,3 +25,22 @@ SQLALCHEMY_ECHO = DEBUG
 DEBUG_TB_ENABLED = DEBUG
 DEBUG_TB_INTERCEPT_REDIRECTS = False
 SQLALCHEMY_TRACK_MODIFICATIONS = False
+SWAGGER_TEMPLATE = {
+    "swagger": "2.0",
+    "info": {
+        "title": "Store Management API",
+        "description": "API documentation for the store management system",
+        "version": "1.0.0",
+    },
+    "schemes": ["http", "https"],
+    "hosts": ["127.0.0.1:5000", "localhost:5000"],
+    "basePath": "/api/v1",
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+            "description": "Enter 'Bearer <your_token>' in the field below",
+        },
+    },
+}
