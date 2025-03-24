@@ -9,7 +9,6 @@ from sqlalchemy.exc import IntegrityError
 
 from store.enums import OrderStatusEnum
 from store.extensions import db
-from store.order import swagger
 from store.order.models import Item, Order
 from store.permissions import admin_required
 from store.product.models import Product
@@ -22,7 +21,7 @@ blueprint = Blueprint("order", __name__, url_prefix="/orders")
 
 @blueprint.route("/", methods=["POST"])
 @jwt_required()
-@swag_from(swagger.ADD_ORDER)
+@swag_from("/store/swagger_docs/order/add_order.yml")
 def add_order():  # Real Project this section is in Cache or session or temp memory.
     data = request.get_json()
     items = data.get("items", [])
@@ -84,7 +83,7 @@ def add_order():  # Real Project this section is in Cache or session or temp mem
 
 @blueprint.route("/tracking/<string:tracking_code>", methods=["GET"])
 @jwt_required()
-@swag_from(swagger.GET_ORDER)
+@swag_from("/store/swagger_docs/order/get_order.yml")
 def get_order(tracking_code):
     order = Order.query.filter_by(tracking_code=tracking_code).first()
     if not order:
@@ -96,7 +95,7 @@ def get_order(tracking_code):
 
 @blueprint.route("/", methods=["GET"])
 @jwt_required()
-@swag_from(swagger.GET_LIST_ORDERS)
+@swag_from("/store/swagger_docs/order/get_list_orders.yml")
 def get_list_order():
     page = int(request.args.get("page", 1))
     per_page = 5
@@ -119,7 +118,7 @@ def get_list_order():
 
 @blueprint.route("/<int:order_id>", methods=["DELETE"])
 @jwt_required()
-@swag_from(swagger.DELETE_PENDNG_ORDER)
+@swag_from("/store/swagger_docs/order/delete_order.yml")
 def delete_pending_order(order_id):
     order = (
         Order.query.join(User)
@@ -194,7 +193,7 @@ def update_order_status(
 
 @blueprint.route("/<int:order_id>/confirmed", methods=["PATCH"])
 @jwt_required()
-@swag_from(swagger.CONFIRMED_ORDER)
+@swag_from("/store/swagger_docs/order/confirm_order.yml")
 def confirmed_order(order_id):
     return update_order_status(
         order_id,
@@ -207,7 +206,7 @@ def confirmed_order(order_id):
 
 @blueprint.route("/<int:order_id>/canceled", methods=["PATCH"])
 @jwt_required()
-@swag_from(swagger.CANCELED_ORDER)
+@swag_from("/store/swagger_docs/order/cancel_order.yml")
 def canceled_confirmed_order(order_id):
     return update_order_status(
         order_id,
@@ -220,7 +219,7 @@ def canceled_confirmed_order(order_id):
 
 @blueprint.route("/<int:order_id>/completed", methods=["PATCH"])
 @admin_required()
-@swag_from(swagger.COMPLETED_ORDER)
+@swag_from("/store/swagger_docs/order/compelete_order.yml")
 def completed_order(user, order_id):
     order = Order.query.filter(
         Order.id == order_id,
@@ -237,7 +236,7 @@ def completed_order(user, order_id):
 
 @blueprint.route("/<int:order_id>", methods=["PUT", "PATCH"])
 @jwt_required()
-@swag_from(swagger.UPDATE_PENDING_ORDER)
+@swag_from("/store/swagger_docs/order/update_pending_order.yml")
 def update_pending_order(order_id):
     condition_date = datetime.now() - timedelta(hours=1)  # noqa: DTZ005
     order = (

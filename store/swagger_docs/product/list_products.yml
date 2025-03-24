@@ -1,0 +1,52 @@
+tags:
+  - Product
+summary: List products
+description: Retrieves a paginated list of products.
+parameters:
+  - name: page
+    in: query
+    description: Page number
+    required: false
+    type: integer
+    default: 1
+responses:
+  200:
+    description: List of products
+    schema:
+      type: object
+      properties:
+        page:
+          type: integer
+        per_page:
+          type: integer
+        total_products:
+          type: integer
+        total_pages:
+          type: integer
+        has_next:
+          type: boolean
+        has_prev:
+          type: boolean
+        products:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+              price:
+                type: number
+              inventory:
+                type: integer
+              description:
+                type: string
+              created_by:
+                type: integer
+              updated_by:
+                type: integer
+              created_at:
+                type: string
+              updated_at:
+                type: string

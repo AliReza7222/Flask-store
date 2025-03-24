@@ -1,0 +1,16 @@
+tags:
+  - Order
+summary: Confirm an order
+description: Marks a pending order as confirmed.
+security:
+  - BearerAuth: []
+parameters:
+  - name: order_id
+    in: path
+    type: integer
+    required: true
+responses:
+  200:
+    description: Order confirmed successfully
+  404:
+    description: Order not found

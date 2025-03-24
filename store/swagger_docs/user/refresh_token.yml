@@ -1,0 +1,16 @@
+tags:
+  - User
+summary: Refresh access token
+description: Refresh an expired access token using a valid refresh token.
+security:
+  - BearerAuth: []
+responses:
+  200:
+    description: New access token generated
+    schema:
+      type: object
+      properties:
+        access_token:
+          type: string
+  401:
+    description: Invalid or missing refresh token

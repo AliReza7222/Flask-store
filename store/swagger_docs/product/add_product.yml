@@ -1,0 +1,56 @@
+tags:
+  - Product
+summary: Add a new product
+description: Adds a new product to the inventory (Admin only).
+security:
+  - BearerAuth: []
+parameters:
+  - name: body
+    in: body
+    description: Product object that needs to be added
+    required: true
+    schema:
+      type: object
+      properties:
+        name:
+          type: string
+        price:
+          type: number
+          minimum: 0.01
+        inventory:
+          type: integer
+          minimum: 0
+        description:
+          type: string
+      required:
+        - name
+        - price
+        - inventory
+responses:
+  201:
+    description: Product created successfully
+    schema:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        price:
+          type: number
+        inventory:
+          type: integer
+        description:
+          type: string
+        created_by:
+          type: integer
+        updated_by:
+          type: integer
+        created_at:
+          type: string
+        updated_at:
+          type: string
+  400:
+    description: Bad Request
+  401:
+    description: Unauthorized

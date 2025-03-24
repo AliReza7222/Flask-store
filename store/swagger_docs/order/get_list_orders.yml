@@ -1,0 +1,47 @@
+tags:
+  - Order
+summary: Get list of orders
+description: Retrieves a paginated list of orders for the authenticated user.
+security:
+  - BearerAuth: []
+parameters:
+  - name: page
+    in: query
+    type: integer
+    required: false
+    description: Page number (default= 1)
+    default: 1
+responses:
+  200:
+    description: List of orders
+    schema:
+      type: object
+      properties:
+        page:
+          type: integer
+        per_page:
+          type: integer
+        total_orders:
+          type: integer
+        total_pages:
+          type: integer
+        has_next:
+          type: boolean
+        has_prev:
+          type: boolean
+        orders:
+          type: array
+          items:
+            properties:
+              id:
+                type: integer
+              created_at:
+                type: string
+              status:
+                type: string
+              total_price:
+                type: number
+              tracking_code:
+                type: string
+              user_id:
+                type: integer

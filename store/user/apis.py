@@ -10,7 +10,6 @@ from flask_jwt_extended import (
 )
 
 from store.extensions import db
-from store.user import swagger
 from store.user.models import User
 from store.validators import validate_email_format
 
@@ -18,7 +17,7 @@ blueprint = Blueprint("user", __name__, url_prefix="/users")
 
 
 @blueprint.route("/", methods=["POST"])
-@swag_from(swagger.REGISTER_USER)
+@swag_from("/store/swagger_docs/user/register_user.yml")
 def register_user():
     data = request.get_json()
     email = data.get("email")
@@ -56,7 +55,7 @@ def register_user():
 
 
 @blueprint.route("/<int:user_id>", methods=["GET"])
-@swag_from(swagger.GET_USER)
+@swag_from("/store/swagger_docs/user/get_user.yml")
 def get_user(user_id):
     user = User.query.get_or_404(user_id)
     response = {
@@ -70,7 +69,7 @@ def get_user(user_id):
 
 
 @blueprint.route("/login", methods=["POST"])
-@swag_from(swagger.LOGIN_USER)
+@swag_from("/store/swagger_docs/user/login_user.yml")
 def login_user():
     data = request.get_json()
     email = data.get("email")
@@ -95,7 +94,7 @@ def login_user():
 
 @blueprint.route("/refresh", methods=["POST"])
 @jwt_required(refresh=True)
-@swag_from(swagger.REFRESH_TOKEN)
+@swag_from("/store/swagger_docs/user/refresh_token.yml")
 def refresh():
     identity = get_jwt_identity()
     access_token = create_access_token(identity=identity)

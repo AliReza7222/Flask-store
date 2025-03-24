@@ -1,0 +1,18 @@
+tags:
+  - Order
+summary: Delete a pending order
+description: Deletes a pending order if it belongs to the authenticated user.
+security:
+  - BearerAuth: []
+parameters:
+  - name: order_id
+    in: path
+    type: integer
+    required: true
+responses:
+  200:
+    description: Order deleted successfully
+  404:
+    description: Order not found
+  403:
+    description: Order is not in 'Pending' status

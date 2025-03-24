@@ -1,0 +1,55 @@
+tags:
+  - Product
+summary: Update a product
+description: Updates details of a specific product (Admin only).
+security:
+  - BearerAuth: []
+parameters:
+  - name: product_id
+    in: path
+    required: true
+    type: integer
+  - name: body
+    in: body
+    description: Product object that needs to be updated
+    required: true
+    schema:
+      type: object
+      properties:
+        name:
+          type: string
+        price:
+          type: number
+          minimum: 0.01
+        inventory:
+          type: integer
+          minimum: 0
+        description:
+          type: string
+      required:
+        - name
+        - price
+        - inventory
+        - description
+responses:
+  200:
+    description: Product updated successfully
+    schema:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        price:
+          type: number
+        inventory:
+          type: integer
+        description:
+          type: string
+  400:
+    description: Bad Request
+  401:
+    description: Unauthorized
+  404:
+    description: Product not found
