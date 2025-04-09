@@ -8,10 +8,12 @@ from flask_jwt_extended import (
     get_jwt_identity,
     jwt_required,
 )
+from marshmallow import ValidationError
 
 from store.extensions import db
 from store.user.models import User
-from store.validators import validate_email_format
+from store.user.schemas import LoginUserSchema, RegisterUserSchema
+from store.validators import exists_user
 
 blueprint = Blueprint("user", __name__, url_prefix="/users")
 
@@ -19,70 +21,36 @@ blueprint = Blueprint("user", __name__, url_prefix="/users")
 @blueprint.route("/", methods=["POST"])
 @swag_from("/store/swagger_docs/user/register_user.yml")
 def register_user():
-    data = request.get_json()
-    email = data.get("email")
-    password = data.get("password")
-    full_name = data.get("full_name", "")
+    register_user_schema = RegisterUserSchema()
 
-    if not email or not password:
+    try:
+        valid_data = register_user_schema.load(request.get_json())
+        user = register_user_schema.create_user(data=valid_data)
+    except ValidationError as error:
+        return jsonify(error.messages), HTTPStatus.BAD_REQUEST
+
+    if exists_user(user_email=user.email):
         return jsonify(
-            {"error": "Please enter email and password."},
+            {"error": f"User with email {user.email} already exists."},
         ), HTTPStatus.BAD_REQUEST
 
-    if not validate_email_format(email):
-        return jsonify({"error": "Email is InValid."}), HTTPStatus.BAD_REQUEST
-
-    if len(password) < 8:  # noqa: PLR2004
-        return jsonify(
-            {"error": "Password must be at least 8 characters long."},
-        ), HTTPStatus.BAD_REQUEST
-
-    if db.session.query(User.query.filter_by(email=email).exists()).scalar():
-        return jsonify(
-            {"error": f"User with email {email} already exists."},
-        ), HTTPStatus.BAD_REQUEST
-
-    user = User(email=email, active=True, full_name=full_name)
-    user.password = password
     db.session.add(user)
     db.session.commit()
-    response = {
-        "id": user.id,
-        "email": email,
-        "full_name": full_name,
-    }
-    return jsonify(response), HTTPStatus.CREATED
-
-
-@blueprint.route("/<int:user_id>", methods=["GET"])
-@swag_from("/store/swagger_docs/user/get_user.yml")
-def get_user(user_id):
-    user = User.query.get_or_404(user_id)
-    response = {
-        "id": user.id,
-        "email": user.email,
-        "full_name": user.full_name,
-        "active": user.active,
-        "is_admin": user.is_admin,
-    }
-    return jsonify(response), HTTPStatus.OK
+    return jsonify(register_user_schema.dump(user)), HTTPStatus.CREATED
 
 
 @blueprint.route("/login", methods=["POST"])
 @swag_from("/store/swagger_docs/user/login_user.yml")
 def login_user():
-    data = request.get_json()
-    email = data.get("email")
-    password = data.get("password")
+    login_user_schema = LoginUserSchema()
+    try:
+        valid_data = login_user_schema.load(request.get_json())
+    except ValidationError as error:
+        return jsonify(error.messages), HTTPStatus.BAD_REQUEST
 
-    if not email or not password:
-        return jsonify(
-            {"error": "Please enter email and password."},
-        ), HTTPStatus.BAD_REQUEST
+    user = User.query.filter_by(email=valid_data.get("email")).first()
 
-    user = User.query.filter_by(email=email).first()
-
-    if not user or not user.check_password(password):
+    if not user or not user.check_password(valid_data.get("password")):
         return jsonify({"error": "email or password is invalid!"}), HTTPStatus.NOT_FOUND
 
     response = {
@@ -99,3 +67,17 @@ def refresh():
     identity = get_jwt_identity()
     access_token = create_access_token(identity=identity)
     return jsonify(access_token=access_token)
+
+
+@blueprint.route("/<int:user_id>", methods=["GET"])
+@swag_from("/store/swagger_docs/user/get_user.yml")
+def get_user(user_id):
+    user = User.query.get_or_404(user_id)
+    response = {
+        "id": user.id,
+        "email": user.email,
+        "full_name": user.full_name,
+        "active": user.active,
+        "is_admin": user.is_admin,
+    }
+    return jsonify(response), HTTPStatus.OK

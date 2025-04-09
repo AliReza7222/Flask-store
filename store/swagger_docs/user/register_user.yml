@@ -15,6 +15,9 @@ parameters:
         password:
           type: string
           minLength: 8
+        re_password:
+          type: string
+          minLength: 8
         full_name:
           type: string
       required:
