@@ -8,12 +8,11 @@ from flask_jwt_extended import (
     get_jwt_identity,
     jwt_required,
 )
-from marshmallow import ValidationError
 
 from store.extensions import db
 from store.user.models import User
 from store.user.schemas import LoginUserSchema, RegisterUserSchema
-from store.validators import exists_user
+from store.validators import exists_row
 
 blueprint = Blueprint("user", __name__, url_prefix="/users")
 
@@ -22,14 +21,10 @@ blueprint = Blueprint("user", __name__, url_prefix="/users")
 @swag_from("/store/swagger_docs/user/register_user.yml")
 def register_user():
     register_user_schema = RegisterUserSchema()
+    valid_data = register_user_schema.load(request.get_json())
+    user = register_user_schema.create_user(data=valid_data)
 
-    try:
-        valid_data = register_user_schema.load(request.get_json())
-        user = register_user_schema.create_user(data=valid_data)
-    except ValidationError as error:
-        return jsonify(error.messages), HTTPStatus.BAD_REQUEST
-
-    if exists_user(user_email=user.email):
+    if exists_row(User, email=user.email):
         return jsonify(
             {"error": f"User with email {user.email} already exists."},
         ), HTTPStatus.BAD_REQUEST
@@ -43,11 +38,7 @@ def register_user():
 @swag_from("/store/swagger_docs/user/login_user.yml")
 def login_user():
     login_user_schema = LoginUserSchema()
-    try:
-        valid_data = login_user_schema.load(request.get_json())
-    except ValidationError as error:
-        return jsonify(error.messages), HTTPStatus.BAD_REQUEST
-
+    valid_data = login_user_schema.load(request.get_json())
     user = User.query.filter_by(email=valid_data.get("email")).first()
 
     if not user or not user.check_password(valid_data.get("password")):

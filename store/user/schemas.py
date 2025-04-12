@@ -41,5 +41,4 @@ class LoginUserSchema(Schema):
     password = fields.Str(
         required=True,
         load_only=True,
-        validate=Length(min=8),
     )
