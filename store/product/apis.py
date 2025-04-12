@@ -6,7 +6,8 @@ from flask import Blueprint, jsonify, request
 from store.extensions import db
 from store.permissions import admin_required
 from store.product.models import Product
-from store.utils import to_dict
+from store.product.schemas import ProductSchema
+from store.validators import exists_row
 
 blueprint = Blueprint("product", __name__, url_prefix="/products")
 
@@ -15,51 +16,50 @@ blueprint = Blueprint("product", __name__, url_prefix="/products")
 @admin_required()
 @swag_from("/store/swagger_docs/product/add_product.yml")
 def add_product(user):
-    data = request.get_json()
-    required_fields = ("name", "price", "inventory")
-    missing_fields = [field for field in required_fields if field not in data]
+    add_product_schema = ProductSchema()
+    valid_data = add_product_schema.load(request.get_json())
+    product = add_product_schema.create_product(valid_data)
 
-    if missing_fields:
+    if Product.query.filter_by(name=valid_data.get("name")).first():
         return jsonify(
             {
-                "error": f"Missiong Fields: {', '.join(missing_fields)}",
+                "error": f"Product with this name {valid_data.get('name')} already exists.",  # noqa: E501
             },
         ), HTTPStatus.BAD_REQUEST
 
-    if Product.query.filter_by(name=data.get("name")).first():
-        return jsonify(
-            {"error": f"Product with this name {data.get('name')} already exists."},
-        ), HTTPStatus.BAD_REQUEST
-
-    if not isinstance(data.get("price"), (int, float)) or data.get("price") <= 0:
-        return jsonify(
-            {"error": "Price must be a positive number."},
-        ), HTTPStatus.BAD_REQUEST
-
-    if not isinstance(data.get("inventory"), int) or data.get("inventory") < 0:
-        return jsonify(
-            {"error": "Inventory must be a non-negative integer."},
-        ), HTTPStatus.BAD_REQUEST
-
-    product = Product(
-        name=data.get("name"),
-        price=data.get("price"),
-        inventory=data.get("inventory"),
-        created_by=user.id,
-        description=data.get("description", ""),
-    )
     db.session.add(product)
-    db.session.flush()
-    response = to_dict(product)
     db.session.commit()
-    return jsonify(response), HTTPStatus.CREATED
+    return jsonify(add_product_schema.dump(product)), HTTPStatus.CREATED
+
+
+@blueprint.route("/", methods=["GET"])
+@swag_from("/store/swagger_docs/product/list_products.yml")
+def list_products():
+    product_schema = ProductSchema()
+    # https://flask-sqlalchemy.readthedocs.io/en/stable/api/#flask_sqlalchemy.pagination.Pagination
+    page = int(
+        request.args.get("page", 1),
+    )  # default is "1" and for ex: /?page=<number>
+    per_page = 10
+    pagination = Product.query.paginate(page=page, per_page=per_page, error_out=False)
+    response = {
+        "page": pagination.page,
+        "per_page": pagination.per_page,
+        "total_products": pagination.total,
+        "total_pages": pagination.pages,
+        "has_next": pagination.has_next,
+        "has_prev": pagination.has_prev,
+        "products": [product_schema.dump(product) for product in pagination.items],
+    }
+    return jsonify(response), HTTPStatus.OK
 
 
 @blueprint.route("/<int:product_id>", methods=["GET"])
 @swag_from("/store/swagger_docs/product/get_product.yml")
 def get_product(product_id):
     product = Product.query.get_or_404(product_id)
-    return jsonify(to_dict(product)), HTTPStatus.OK
+    product_schema = ProductSchema()
+    return jsonify(product_schema.dump(product)), HTTPStatus.OK
 
 
 @blueprint.route("/<int:product_id>", methods=["DELETE"])
@@ -76,54 +76,22 @@ def delete_product(user, product_id):
     ), HTTPStatus.OK
 
 
-@blueprint.route("/", methods=["GET"])
-@swag_from("/store/swagger_docs/product/list_products.yml")
-def list_products():
-    # https://flask-sqlalchemy.readthedocs.io/en/stable/api/#flask_sqlalchemy.pagination.Pagination
-    page = int(
-        request.args.get("page", 1),
-    )  # default is "1" and for ex: /?page=<number>
-    per_page = 10
-    pagination = Product.query.paginate(page=page, per_page=per_page, error_out=False)
-    response = {
-        "page": pagination.page,
-        "per_page": pagination.per_page,
-        "total_products": pagination.total,
-        "total_pages": pagination.pages,
-        "has_next": pagination.has_next,
-        "has_prev": pagination.has_prev,
-        "products": [to_dict(product) for product in pagination.items],
-    }
-    return jsonify(response), HTTPStatus.OK
-
-
 @blueprint.route("/<int:product_id>", methods=["PUT"])
 @admin_required()
 @swag_from("/store/swagger_docs/product/update_product.yml")
 def update_product(user, product_id):
-    data = request.get_json()
-    fields = ("name", "price", "inventory", "description")
-    missing_fields = [field for field in fields if field not in data]
-    if missing_fields:
-        return jsonify(
-            {
-                "error": f"Missiong Fields: {', '.join(missing_fields)}",
-            },
-        ), HTTPStatus.BAD_REQUEST
+    update_product_schema = ProductSchema()
+    valid_data = update_product_schema.load(request.get_json())
 
-    if db.session.query(
-        db.exists().where(Product.name == data.get("name"), Product.id != product_id),
-    ).scalar():
+    if exists_row(Product, name=valid_data.get("name")):
         return jsonify(
             {"error": "Product with this name already exists."},
         ), HTTPStatus.BAD_REQUEST
 
     # Dirty Update for running event after_update
     product = Product.query.get_or_404(product_id)
-    for field, value in data.items():
+    for field, value in valid_data.items():
         setattr(product, field, value)
     product.updated_by = user.id
-    db.session.flush()
-    response = to_dict(product)
     db.session.commit()
-    return jsonify(response), HTTPStatus.OK
+    return jsonify(update_product_schema.dump(product)), HTTPStatus.OK
