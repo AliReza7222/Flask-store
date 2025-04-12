@@ -1,6 +1,7 @@
 from flask import Flask
 
 from store import commands, order, product, user
+from store.error_handler import store_error_handler
 from store.extensions import (
     bcrypt,
     db,
@@ -18,6 +19,7 @@ def create_app(config_obj="store.settings"):
     register_extensions(app)
     register_commands(app)
     register_blueprints(app)
+    register_error_handler(app)
     return app
 
 
@@ -40,3 +42,7 @@ def register_blueprints(app):
     api.register_blueprint(product.apis.blueprint)
     api.register_blueprint(order.apis.blueprint)
     app.register_blueprint(api)
+
+
+def register_error_handler(app):
+    store_error_handler(app)
