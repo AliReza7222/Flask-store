@@ -1,7 +1,6 @@
 from email_validator import EmailNotValidError, validate_email
 
 from store.extensions import db
-from store.user.models import User
 
 
 def validate_email_format(email):
@@ -19,5 +18,5 @@ def validate_order_items(items):
     )
 
 
-def exists_user(user_email: str):
-    return db.session.query(User.query.filter_by(email=user_email).exists()).scalar()
+def exists_row(model, **kwargs):
+    return db.session.query(model.query.filter_by(**kwargs).exists()).scalar()
