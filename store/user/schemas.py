@@ -5,29 +5,16 @@ from store.user.models import User
 
 
 class RegisterUserSchema(Schema):
-    re_password = fields.Str(load_only=True, required=True)
-
-    class Meta:
-        model = User
-        fields = ("id", "email", "full_name", "password", "re_password")
-        load_only = ("password",)
-        dump_only = ("id",)
-        required = {
-            "email": True,
-            "full_name": True,
-            "password": True,
-        }
-        validate = {
-            "email": Email(),
-            "full_name": Length(min=1, max=150),
-            "password": Length(min=8),
-        }
+    id = fields.Int(dump_only=True)
+    email = fields.Str(required=True, validate=[Email()])
+    full_name = fields.Str(required=True, validate=Length(min=1, max=150))
+    password = fields.Str(required=True, load_only=True, validate=Length(min=8))
+    re_password = fields.Str(required=True, load_only=True)
 
     @validates_schema
     def validate_data(self, data, **kwargs):
         if data.get("password") != data.get("re_password"):
-            error_msg = "Passwords do not match."
-            raise ValidationError(error_msg, field_name="password")
+            raise ValidationError("Passwords do not match.", field_name="password")  # noqa: EM101, TRY003
 
     def create_user(self, data, **kwargs):
         data.pop("re_password", None)
