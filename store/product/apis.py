@@ -20,7 +20,7 @@ def add_product(user):
     valid_data = add_product_schema.load(request.get_json())
     product = add_product_schema.create_product(valid_data)
 
-    if Product.query.filter_by(name=valid_data.get("name")).first():
+    if exists_row(Product, name=valid_data.get("name")):
         return jsonify(
             {
                 "error": f"Product with this name {valid_data.get('name')} already exists.",  # noqa: E501
