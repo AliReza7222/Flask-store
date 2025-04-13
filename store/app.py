@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_smorest import Api
 
 from store import commands, order, product, user
 from store.error_handler import store_error_handler
@@ -8,9 +9,7 @@ from store.extensions import (
     debug_toolbar,
     jwt,
     migrate,
-    swagger,
 )
-from store.routes import api
 
 
 def create_app(config_obj="store.settings"):
@@ -29,7 +28,6 @@ def register_extensions(app):
     debug_toolbar.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
-    swagger.init_app(app)
 
 
 def register_commands(app):
@@ -38,10 +36,10 @@ def register_commands(app):
 
 def register_blueprints(app):
     # Register API Blueprint
+    api = Api(app)
     api.register_blueprint(user.apis.blueprint)
     api.register_blueprint(product.apis.blueprint)
     api.register_blueprint(order.apis.blueprint)
-    app.register_blueprint(api)
 
 
 def register_error_handler(app):
