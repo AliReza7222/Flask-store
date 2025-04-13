@@ -10,13 +10,5 @@ def validate_email_format(email):
         return None
 
 
-def validate_order_items(items):
-    return all(
-        isinstance(item.get("product_id"), int)
-        and isinstance(item.get("quantity"), int)
-        for item in items
-    )
-
-
 def exists_row(model, **kwargs):
     return db.session.query(model.query.filter_by(**kwargs).exists()).scalar()
