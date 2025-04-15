@@ -1,6 +1,6 @@
 from http import HTTPStatus
 
-from flask import jsonify, request
+from flask import jsonify
 from flask.views import MethodView
 from flask_jwt_extended import (
     create_access_token,
@@ -10,21 +10,22 @@ from flask_jwt_extended import (
 )
 
 from store.extensions import db
+from store.permissions import admin_required
 from store.routes import create_blueprint_api
 from store.user.models import User
 from store.user.schemas import LoginUserSchema, RegisterUserSchema
 from store.validators import exists_row
 
-blueprint = create_blueprint_api(name="users", url_prefix="/users", version="v1")
+blueprint = create_blueprint_api(name="users", url_prefix="users", version="v1")
 
 
 @blueprint.route("/")
 class RegisterUserAPI(MethodView):
     @blueprint.arguments(RegisterUserSchema)
     @blueprint.response(HTTPStatus.CREATED, RegisterUserSchema)
-    def post(self, user_data):
+    def post(self, data):
         register_user_schema = RegisterUserSchema()
-        valid_data = register_user_schema.load(user_data)
+        valid_data = register_user_schema.load(data)
         user = register_user_schema.create_user(data=valid_data)
 
         if exists_row(User, email=user.email):
@@ -40,9 +41,9 @@ class RegisterUserAPI(MethodView):
 @blueprint.route("/login")
 class LoginUserAPI(MethodView):
     @blueprint.arguments(LoginUserSchema)
-    def post(self):
+    def post(self, data):
         login_user_schema = LoginUserSchema()
-        valid_data = login_user_schema.load(request.get_json())
+        valid_data = login_user_schema.load(data)
         user = User.query.filter_by(email=valid_data.get("email")).first()
 
         if not user or not user.check_password(valid_data.get("password")):
@@ -66,11 +67,11 @@ class RefreshTokenAPI(MethodView):
         return jsonify(access_token=access_token)
 
 
-@blueprint.route("/<int:user_id>")
+@blueprint.route("/me")
 class UserDetailAPI(MethodView):
     @blueprint.response(HTTPStatus.OK)
-    def get(self, user_id):
-        user = User.query.get_or_404(user_id)
+    @admin_required()
+    def get(self, user, *args, **kwargs):
         response = {
             "id": user.id,
             "email": user.email,

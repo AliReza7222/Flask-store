@@ -6,7 +6,7 @@ from store.user.models import User
 
 class RegisterUserSchema(Schema):
     id = fields.Int(dump_only=True)
-    email = fields.Str(required=True, validate=[Email()])
+    email = fields.Email(required=True, validate=[Email()])
     full_name = fields.Str(required=True, validate=Length(min=1, max=150))
     password = fields.Str(required=True, load_only=True, validate=Length(min=8))
     re_password = fields.Str(required=True, load_only=True)
