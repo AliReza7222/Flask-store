@@ -35,13 +35,14 @@ OPENAPI_SWAGGER_UI_URL = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
 API_SPEC_OPTIONS = {
     "components": {
         "securitySchemes": {
-            "BearerAuth": {
-                "type": "http",
-                "scheme": "bearer",
+            "Bearer Auth": {
+                "type": "apiKey",
+                "name": "Authorization",
                 "bearerFormat": "JWT",
+                "in": "header",
                 "description": "Enter your JWT token like: **Bearer &lt;token>**",
             },
         },
     },
-    "security": [{"BearerAuth": []}],
+    "security": [{"Bearer Auth": []}],
 }
