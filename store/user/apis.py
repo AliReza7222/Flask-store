@@ -10,7 +10,6 @@ from flask_jwt_extended import (
 )
 
 from store.extensions import db
-from store.permissions import admin_required
 from store.routes import create_blueprint_api
 from store.user.models import User
 from store.user.schemas import LoginUserSchema, RegisterUserSchema
@@ -70,13 +69,20 @@ class RefreshTokenAPI(MethodView):
 @blueprint.route("/me")
 class UserDetailAPI(MethodView):
     @blueprint.response(HTTPStatus.OK)
-    @admin_required()
-    def get(self, user, *args, **kwargs):
-        response = {
+    @jwt_required()
+    def get(self):
+        user = User.query.filter_by(email=get_jwt_identity()).first()
+        if not user:
+            return jsonify(
+                {"error": "No exists this user!"},
+            ), HTTPStatus.NOT_FOUND
+        return jsonify(self.response(user)), HTTPStatus.OK
+
+    def response(self, user):
+        return {
             "id": user.id,
             "email": user.email,
             "full_name": user.full_name,
             "active": user.active,
             "is_admin": user.is_admin,
         }
-        return jsonify(response), HTTPStatus.OK
