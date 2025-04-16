@@ -2,7 +2,9 @@ from http import HTTPStatus
 
 from flask import abort, request
 from marshmallow import ValidationError
+from sqlalchemy.exc import IntegrityError
 
+from store.exceptions import ConflictIntegrityError
 from store.extensions import db
 from store.product.models import Product
 from store.product.schemas import ProductSchema
@@ -56,7 +58,11 @@ class ProductService:
     def delete(self, product_id: int) -> None:
         product: Product = self.find_product(product_id)
         db.session.delete(product)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except IntegrityError as error:
+            db.session.rollback()
+            raise ConflictIntegrityError from error
 
     def full_update(self, data: dict, product_id: int, user: User) -> dict:
         update_product_schema = ProductSchema()
