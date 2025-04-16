@@ -3,7 +3,7 @@ from email_validator import EmailNotValidError, validate_email
 from store.extensions import db
 
 
-def validate_email_format(email):
+def validate_email_format(email: str) -> bool | None:
     try:
         return bool(validate_email(email, check_deliverability=True).email)
     except EmailNotValidError:

@@ -3,7 +3,11 @@ from marshmallow import ValidationError
 from store.product.models import Product
 
 
-def _validate_product_for_order(product: Product, quantity: int, product_id: int):
+def _validate_product_for_order(
+    product: Product | None,
+    quantity: int,
+    product_id: int,
+) -> None:
     if not product:
         msg_error = f"Product with id {product_id} not found."
         raise ValidationError(
@@ -18,7 +22,7 @@ def _validate_product_for_order(product: Product, quantity: int, product_id: int
         )
 
 
-def calculate_total_price_products(dict_products, items):
+def calculate_total_price_products(dict_products: dict, items: dict) -> float:
     total_price = 0
 
     for item in items:
