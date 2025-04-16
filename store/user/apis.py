@@ -18,14 +18,14 @@ user_service = UserService()
 class RegisterUserAPI(MethodView):
     @blueprint.arguments(RegisterUserSchema)
     @blueprint.response(HTTPStatus.CREATED, RegisterUserSchema)
-    def post(self, data):
+    def post(self, data: dict):
         return jsonify(user_service.register_user(data)), HTTPStatus.CREATED
 
 
 @blueprint.route("/login")
 class LoginUserAPI(MethodView):
     @blueprint.arguments(LoginUserSchema)
-    def post(self, data):
+    def post(self, data: dict):
         return jsonify(user_service.login_user(data)), HTTPStatus.OK
 
 

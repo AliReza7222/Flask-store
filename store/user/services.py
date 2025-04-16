@@ -14,10 +14,10 @@ from store.validators import exists_row
 
 
 class UserService:
-    def register_user(self, data):
+    def register_user(self, user_data: dict) -> dict:
         register_user_schema = RegisterUserSchema()
-        valid_data = register_user_schema.load(data)
-        user = register_user_schema.create_user(data=valid_data)
+        valid_data: dict = register_user_schema.load(user_data)
+        user: User = register_user_schema.create_user(data=valid_data)
 
         if exists_row(User, email=user.email):
             abort(
@@ -29,10 +29,10 @@ class UserService:
         db.session.commit()
         return register_user_schema.dump(user)
 
-    def login_user(self, data):
+    def login_user(self, user_data: dict) -> dict:
         login_user_schema = LoginUserSchema()
-        valid_data = login_user_schema.load(data)
-        user = User.query.filter_by(email=valid_data.get("email")).first()
+        valid_data: dict = login_user_schema.load(user_data)
+        user: User | None = User.query.filter_by(email=valid_data.get("email")).first()
 
         if not user or not user.check_password(valid_data.get("password")):
             abort(
@@ -44,12 +44,12 @@ class UserService:
             "refresh_token": create_refresh_token(identity=user.email),
         }
 
-    def refresh_token(self):
-        identity = get_jwt_identity()
+    def refresh_token(self) -> str:
+        identity: str = get_jwt_identity()
         return create_access_token(identity=identity)
 
-    def detail_user(self):
-        user = User.query.filter_by(email=get_jwt_identity()).first()
+    def detail_user(self) -> dict:
+        user: User | None = User.query.filter_by(email=get_jwt_identity()).first()
         if not user:
             abort(HTTPStatus.NOT_FOUND, description="No exists this user!")
         return {
