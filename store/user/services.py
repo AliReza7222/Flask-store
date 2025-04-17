@@ -6,6 +6,7 @@ from flask_jwt_extended import (
     create_refresh_token,
     get_jwt_identity,
 )
+from marshmallow import ValidationError
 
 from store.extensions import db
 from store.user.models import User
@@ -20,10 +21,8 @@ class UserService:
         user: User = register_user_schema.create_user(data=valid_data)
 
         if exists_row(User, email=user.email):
-            abort(
-                HTTPStatus.BAD_REQUEST,
-                description=f"User with email {user.email} already exists.",
-            )
+            msg_error = f"User with email {user.email} already exists."
+            raise ValidationError(msg_error)
 
         db.session.add(user)
         db.session.commit()
