@@ -1,8 +1,9 @@
 from http import HTTPStatus
 
-from flask import jsonify
+from flask import jsonify, request
 from flask.views import MethodView
 
+from store.extensions import cache
 from store.permissions import admin_required
 from store.product.schemas import ProductSchema
 from store.product.services import ProductService
@@ -25,6 +26,10 @@ class AddProduct(MethodView):
 class GetListProducts(MethodView):
     @blueprint.response(HTTPStatus.OK, ProductSchema)
     @blueprint.paginate()
+    @cache.cached(
+        timeout=300,
+        key_prefix=lambda: f"products_list_page_{request.args.get('page', 1)}",
+    )
     def get(self, pagination_parameters):
         return jsonify(product_service.list_products()), HTTPStatus.OK
 

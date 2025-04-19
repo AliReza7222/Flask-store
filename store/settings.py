@@ -60,3 +60,9 @@ CELERY_BEAT_SCHEDULE = {
 # RateLimit
 RATELIMIT_STORAGE_URI = env.str("REDIS_URL", default="redis://localhost:6379/0")
 RATELIMIT_DEFAULT_LIMITS = []
+# Cache
+CACHE_TYPE = "RedisCache"
+CACHE_REDIS_HOST = env.str("CACHE_REDIS_HOST", default="localhost")
+CACHE_REDIS_PORT = env.int("CACHE_REDIS_PORT", default=6379)
+CACHE_REDIS_DB = 0
+CACHE_DEFAULT_TIMEOUT = 300
