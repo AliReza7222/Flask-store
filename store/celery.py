@@ -13,8 +13,10 @@ def celery_init_app(app: Flask) -> Celery:
         {
             "broker_url": app.config["CELERY_BROKER_URL"],
             "result_backend": app.config["CELERY_RESULT_BACKEND"],
+            "beat_schedule": app.config.get("CELERY_BEAT_SCHEDULE", {}),
         },
     )
     celery_app.set_default()
+    celery_app.autodiscover_tasks(["store"])
     app.extensions["celery"] = celery_app
     return celery_app

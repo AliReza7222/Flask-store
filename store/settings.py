@@ -8,6 +8,7 @@ environment variables.
 
 from datetime import timedelta
 
+from celery.schedules import crontab
 from environs import Env
 
 env = Env()
@@ -50,3 +51,9 @@ API_SPEC_OPTIONS = {
 REDIS_URL = env.str("REDIS_URL", default="redis://localhost:6379/0")
 CELERY_BROKER_URL = env.str("CELERY_BROKER_URL", default=REDIS_URL)
 CELERY_RESULT_BACKEND = env.str("CELERY_RESULT_BACKEND", default=REDIS_URL)
+CELERY_BEAT_SCHEDULE = {
+    "remove-pending-order-after-one-hour": {
+        "task": "store.tasks.remove_old_order_pending_status",
+        "schedule": crontab(minute="*/5"),
+    },
+}
