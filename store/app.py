@@ -2,6 +2,7 @@ from flask import Flask
 from flask_smorest import Api
 
 from store import commands, order, product, user
+from store.celery import celery_init_app
 from store.error_handler import store_error_handler
 from store.extensions import (
     bcrypt,
@@ -19,6 +20,7 @@ def create_app(config_obj="store.settings"):
     register_commands(app)
     register_blueprints(app)
     register_error_handler(app)
+    celery_init_app(app)
     return app
 
 
