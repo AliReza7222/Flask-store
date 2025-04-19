@@ -17,8 +17,8 @@ class AddProduct(MethodView):
     @blueprint.arguments(ProductSchema)
     @blueprint.response(HTTPStatus.CREATED, ProductSchema)
     @admin_required()
-    def post(self, data, *args, **kwargs):
-        return jsonify(product_service.add_product(data)), HTTPStatus.CREATED
+    def post(self, data, user):
+        return jsonify(product_service.add_product(data, user)), HTTPStatus.CREATED
 
 
 @blueprint.route("/")

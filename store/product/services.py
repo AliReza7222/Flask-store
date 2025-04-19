@@ -13,7 +13,7 @@ from store.validators import exists_row
 
 
 class ProductService:
-    def add_product(self, product_data: dict) -> dict:
+    def add_product(self, product_data: dict, user: User) -> dict:
         add_product_schema = ProductSchema()
         valid_data: dict = add_product_schema.load(product_data)
         product: Product = add_product_schema.create_product(valid_data)
@@ -24,6 +24,7 @@ class ProductService:
             )
             raise ValidationError(msg_error)
 
+        product.created_by = user.id
         db.session.add(product)
         db.session.commit()
         return add_product_schema.dump(product)
