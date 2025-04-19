@@ -40,6 +40,22 @@ flask create-admin-user
 flask run --debug
 ```
 
+### Celery
+
+This app comes with Celery.
+
+To run a celery worker:
+
+```bash
+celery -A store.celery_worker.celery_app worker --loglevel=info
+```
+
+To run [periodic tasks](https://docs.celeryq.dev/en/stable/userguide/periodic-tasks.html), you'll need to start the celery beat scheduler service. You can start it as a standalone process:
+
+```bash
+celery -A store.celery_worker.celery_app beat --loglevel=info
+```
+
 ## API docs
 ```bash
 http://127.0.0.1:5000/apidocs/
