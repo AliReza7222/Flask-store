@@ -144,13 +144,11 @@ class TestOrderApi:
         headers = auth_headers(user_store)
 
         response = client.patch(f"/api/v1/orders/{order.id}/confirmed", headers=headers)
-
-        assert response.status_code == HTTPStatus.OK
-
         updated_order = Order.query.get(order.id)
         updated_product1 = Product.query.get(item1.product_id)
         updated_product2 = Product.query.get(item2.product_id)
 
+        assert response.status_code == HTTPStatus.OK
         assert updated_order.status == OrderStatusEnum.CONFIRMED.name
         assert updated_product1.inventory == expected_product1_inventory
         assert updated_product2.inventory == expected_product2_inventory
@@ -189,13 +187,11 @@ class TestOrderApi:
         headers = auth_headers(user_store)
 
         response = client.patch(f"/api/v1/orders/{order.id}/canceled", headers=headers)
-
-        assert response.status_code == HTTPStatus.OK
-
         updated_order = Order.query.get(order.id)
         updated_product1 = Product.query.get(item1.product_id)
         updated_product2 = Product.query.get(item2.product_id)
 
+        assert response.status_code == HTTPStatus.OK
         assert updated_order.status == OrderStatusEnum.CANCELED.name
         assert updated_product1.inventory == expected_product1_inventory
         assert updated_product2.inventory == expected_product2_inventory
