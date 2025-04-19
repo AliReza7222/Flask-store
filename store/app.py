@@ -4,13 +4,7 @@ from flask_smorest import Api
 from store import commands, order, product, user
 from store.celery import celery_init_app
 from store.error_handler import store_error_handler
-from store.extensions import (
-    bcrypt,
-    db,
-    debug_toolbar,
-    jwt,
-    migrate,
-)
+from store.extensions import bcrypt, db, debug_toolbar, jwt, limiter, migrate
 
 
 def create_app(config_obj="store.settings"):
@@ -30,6 +24,7 @@ def register_extensions(app):
     debug_toolbar.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
+    limiter.init_app(app)
 
 
 def register_commands(app):

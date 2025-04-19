@@ -5,6 +5,7 @@ from flask.views import MethodView
 from flask_jwt_extended import jwt_required
 
 from store.enums import OrderStatusEnum
+from store.extensions import limiter
 from store.order.schemas import OrderSchema
 from store.order.services import OrderService
 from store.routes import create_blueprint_api
@@ -18,6 +19,7 @@ class AddOrder(MethodView):  # Real Project this section session or temp memory.
     @blueprint.arguments(OrderSchema)
     @blueprint.response(HTTPStatus.CREATED, OrderSchema)
     @jwt_required()
+    @limiter.limit("2 per day")
     def post(self, data: dict):
         return jsonify(order_service.add_order(data)), HTTPStatus.CREATED
 
