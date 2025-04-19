@@ -50,6 +50,8 @@ To run a celery worker:
 celery -A store.celery_worker.celery_app worker --loglevel=info
 ```
 
+To run a celery beat:
+
 ```bash
 celery -A store.celery_worker.celery_app beat --loglevel=info
 ```
