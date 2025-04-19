@@ -4,6 +4,7 @@ from flask_jwt_extended import create_access_token
 from store.app import create_app
 from store.extensions import db as _db
 from store.factories import OrderFactory, OrderItemFactory, ProductFactory, UserFactory
+from store.settings import REDIS_URL
 
 
 class TestingConfig:
@@ -20,6 +21,8 @@ class TestingConfig:
     API_TITLE = "Test Store Management API"
     API_VERSION = "test-1.0.0"
     OPENAPI_VERSION = "3.0.3"
+    CELERY_BROKER_URL = REDIS_URL
+    CELERY_RESULT_BACKEND = REDIS_URL
 
 
 @pytest.fixture

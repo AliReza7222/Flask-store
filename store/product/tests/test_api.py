@@ -1,5 +1,6 @@
 from http import HTTPStatus
 
+from store.order.models import Order
 from store.product.models import Product
 
 
@@ -121,8 +122,76 @@ class TestProductApi:
         assert updated_product.inventory == update_data["inventory"]
         assert updated_product.updated_by == admin_user.id
 
-    def test_delete_product_in_order_items(self):
-        pass
+    def test_delete_product_in_order_items(  # noqa: PLR0913
+        self,
+        client,
+        product,
+        order_item_factory,
+        db,
+        auth_headers,
+        admin_user,
+    ):
+        order_item_factory(product=product)
 
-    def test_product_update_reflects_in_order_total_price(self):
-        pass
+        headers = auth_headers(admin_user)
+
+        response = client.delete(f"/api/v1/products/{product.id}", headers=headers)
+
+        assert response.status_code == HTTPStatus.CONFLICT
+        assert Product.query.filter_by(id=product.id) is not None
+
+    def test_product_update_reflects_in_order_total_price(  # noqa: PLR0913
+        self,
+        client,
+        db,
+        auth_headers,
+        order_factory,
+        order_item_factory,
+        product_factory,
+        admin_user,
+    ):
+        headers = auth_headers(admin_user)
+        product1 = product_factory(name="P1", price=99.99, inventory=1)
+        product2 = product_factory(name="P2", price=45.01, inventory=2)
+        order_items_data = {
+            "items": [
+                {"product_id": product1.id, "quantity": 1},
+                {"product_id": product2.id, "quantity": 2},
+            ],
+        }
+
+        response_create_order = client.post(
+            "/api/v1/orders/",
+            headers=headers,
+            json=order_items_data,
+        )
+        data_response_create_order = response_create_order.get_json()
+        old_order = Order.query.filter_by(
+            id=data_response_create_order.get("id", 0),
+        ).first()
+        old_calculate_total_price = (product1.price * 1) + (product2.price * 2)
+
+        assert response_create_order.status_code == HTTPStatus.CREATED
+        assert old_order is not None
+        assert old_order.total_price == old_calculate_total_price
+
+        new_data_product2 = {
+            "name": "NEWProduct1",
+            "price": 100,
+            "inventory": 4,
+            "description": "",
+        }
+        response_update_product = client.put(
+            f"/api/v1/products/{product2.id}",
+            headers=headers,
+            json=new_data_product2,
+        )
+
+        new_order = Order.query.filter_by(
+            id=data_response_create_order.get("id", 0),
+        ).first()
+        new_calculate_total_price = (product1.price * 1) + (product2.price * 2)
+
+        assert response_update_product.status_code == HTTPStatus.OK
+        assert new_order.total_price == new_calculate_total_price
+        assert product2.price == new_data_product2.get("price", 0)
