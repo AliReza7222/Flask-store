@@ -56,6 +56,13 @@ To run a celery beat:
 celery -A store.celery_worker.celery_app beat --loglevel=info
 ```
 
+To run a celery flower for monitoring:
+
+```bash
+celery -A store.celery_worker.celery_app flower
+```
+
+
 ## API docs
 ```bash
 http://127.0.0.1:5000/apidocs/
