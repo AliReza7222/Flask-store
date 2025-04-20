@@ -5,6 +5,7 @@ from store import commands, order, product, user
 from store.celery import celery_init_app
 from store.error_handler import store_error_handler
 from store.extensions import bcrypt, cache, db, debug_toolbar, jwt, limiter, migrate
+from store.request_logger import request_logging
 
 
 def create_app(config_obj="store.settings"):
@@ -26,6 +27,7 @@ def register_extensions(app):
     jwt.init_app(app)
     limiter.init_app(app)
     cache.init_app(app)
+    request_logging(app)
 
 
 def register_commands(app):
