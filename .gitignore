@@ -55,3 +55,5 @@ venv/
 # Development database
 *.db
 db.*
+
+.idea/

@@ -1,0 +1,56 @@
+version: '3'
+
+volumes:
+  store_flask_redis_data: {}
+
+services:
+  web: &web
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: store_flask
+    depends_on:
+      - redis
+    ports:
+      - '5000:5000'
+    volumes:
+      - .:/app:z
+    command: /start_app
+
+  celery:
+    <<: *web
+    image: store_flask_celeryworker
+    container_name: store_flask_celeryworker
+    command: /celery_worker
+    ports:
+      []
+    depends_on:
+      - web
+      - redis
+
+  beat:
+    <<: *web
+    image: store_flask_celery_beat
+    container_name: store_flask_celery_beat
+    command: /celery_beat
+    ports:
+      []
+    depends_on:
+      - web
+      - redis
+
+  flower:
+    <<: *web
+    image: store_flask_flower
+    container_name: store_flask_flower
+    command: /flower
+    ports:
+      - "5555:5555"
+    depends_on:
+      - celery
+
+  redis:
+    image: docker.io/redis:6
+    container_name: store_flask_redis
+    volumes:
+      - store_flask_redis_data:/data

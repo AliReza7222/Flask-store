@@ -1,0 +1,23 @@
+.editorconfig
+.gitattributes
+.github
+.gitignore
+.gitlab-ci.yml
+.idea
+.pre-commit-config.yaml
+.readthedocs.yml
+.travis.yml
+.git
+.envs/
+# Virtual environment
+.env
+.venv/
+venv/
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+instance/
+migrations/
