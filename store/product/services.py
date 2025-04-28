@@ -20,7 +20,7 @@ class ProductService:
 
         if exists_row(Product, name=valid_data.get("name")):
             msg_error = (
-                f"Product with this name {valid_data.get('name')} already exists."
+                f"Product with this name {valid_data.get('name')} already exists!"
             )
             raise ValidationError(msg_error)
 
