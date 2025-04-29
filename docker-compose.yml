@@ -16,6 +16,8 @@ services:
     volumes:
       - .:/app:z
     command: /start_app
+    env_file:
+      - .envs/.local/.web
 
   celery:
     <<: *web
